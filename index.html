@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kalendarz Adwentowy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: radial-gradient(circle at top, #fdf6e3, #8b2b14);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  overflow-x: hidden;
+  color: #111;
+}
+
+.wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 1100px;
+  background: rgba(255,255,255,0.97);
+  padding: 26px 26px 20px;
+  border-radius: 24px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  animation: fadeIn 0.6s forwards ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 🎄 choinki */
+.tree {
+  position: absolute;
+  top: 6px;
+  width: 90px;
+  height: 150px;
+  pointer-events: none;
+  opacity: 0.95;
+}
+.tree-left  { left: 18px; }
+.tree-right { right: 18px; transform: scaleX(-1); }
+
+.tree svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 6px rgba(0,0,0,0.35));
+}
+
+@media (max-width: 520px) {
+  .tree { width: 55px; height: 95px; }
+}
+
+/* nagłówek */
+header {
+  text-align: center;
+  margin-bottom: 18px;
+  position: relative;
+  z-index: 1;
+}
+header h1 {
+  font-size: clamp(2.3rem, 4.2vw, 3rem);
+  color: #8b0000;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.35);
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+#current-date { font-weight: 600; color: #b91c1c; }
+#countdown { font-weight: 600; color: #166534; }
+
+/* kalendarz */
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  margin-top: 8px;
+}
+@media (max-width: 768px) { .calendar { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 520px) { .calendar { grid-template-columns: repeat(3, 1fr); } }
+
+/* okienka */
+.day {
+  position: relative;
+  padding-top: 100%;
+  border-radius: 18px;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 5px 12px rgba(0,0,0,0.25);
+  transition: 0.2s;
+  border: 3px solid transparent;
+}
+.day:hover:not(.locked) {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 18px rgba(0,0,0,0.35);
+}
+.day.today {
+  outline: 3px solid gold;
+  box-shadow: 0 0 12px gold;
+}
+
+/* kolory */
+.day.blue  { background:#1f7ec7; border-color:#0b63ab; }
+.day.red   { background:#d61b6a; border-color:#ad1457; }
+.day.green { background:#15803d; border-color:#0f5132; }
+.day.gold  { background:#facc15; border-color:#b45309; }
+
+/* drzwiczki */
+.day-door {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  transform-origin: left center;
+  transition: 0.55s;
+}
+.day.locked .day-door::after {
+  content: "🔒";
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  font-size: 1.2rem;
+}
+.day.opened .day-door {
+  transform: translateX(-105%);
+  opacity: 0;
+}
+
+/* wnętrze okienka */
+.day-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-weight: 600;
+  font-size: 1.4rem;
+  opacity: 0;
+  transition: 0.3s;
+  color: #fefcef;
+}
+.day.opened .day-inner { opacity: 1; }
+
+/* ---- modal ---- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.25s;
+  z-index: 20;
+}
+.modal-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal {
+  background: #fffdf7;
+  width: 95%;
+  max-width: 650px;
+  border-radius: 24px;
+  overflow: hidden;
+  margin: auto;
+  transform: translateY(20px);
+  transition: 0.25s;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+}
+.modal-backdrop.open .modal { transform: translateY(0); }
+
+.modal-header {
+  padding: 14px 20px;
+  background: linear-gradient(135deg,#8b0000,#ef7f23);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-close {
+  background:none; border:none;
+  font-size:1.6rem; color:white; cursor:pointer;
+}
+
+/* treść modala */
+.modal-body {
+  padding: 18px 20px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* ramka zdjęcia */
+.photo-frame {
+  padding: 10px;
+  border: 4px solid gold;
+  background:#fff7df;
+  border-radius: 15px;
+  margin-bottom: 12px;
+  text-align:center;
+}
+.photo-frame img {
+  width: 100%;
+  height: auto;
+  max-height: 60vh;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+/* pola tekstowe pod zdjęciem */
+.message-box, .task-box {
+  padding: 10px 12px 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.message-box {
+  background:#fff5f7;
+  border-left:4px solid #db2777;
+}
+.task-box {
+  background:#fff1e6;
+  border-left:4px solid #b91c1c;
+}
+.message-box h3,
+.task-box h3 {
+  margin-bottom:4px;
+  font-size:0.95rem;
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+  color:#b91c1c;
+}
+.message-box p,
+.task-box p {
+  margin:0;
+  font-size:1rem;
+}
+
+/* śnieg */
+.snowflake {
+  position: fixed;
+  top: -10px;
+  width: 8px; height: 8px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.9;
+  z-index: 3;
+  animation: fall linear;
+}
+@keyframes fall {
+  0% { transform: translateY(0) translateX(0); opacity:1; }
+  100%{ transform: translateY(110vh) translateX(25px); opacity:0.2;}
+}
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <!-- 🎄 CHOINKA LEWA -->
+  <div class="tree tree-left">
+    <svg viewBox="0 0 120 180">
+      <polygon points="60,8 66,24 84,24 69,34 75,50 60,40 45,50 51,34 36,24 54,24"
+        fill="#facc15" stroke="#fbbf24" stroke-width="2"/>
+      <polygon points="60,35 45,70 75,70" fill="#166534"/>
+      <polygon points="60,60 35,110 85,110" fill="#15803d"/>
+      <polygon points="60,90 25,150 95,150" fill="#16a34a"/>
+      <rect x="52" y="150" width="16" height="26" fill="#7c2d12"/>
+      <circle cx="50" cy="55"  r="4" fill="#f97316"/>
+      <circle cx="78" cy="82"  r="4" fill="#e11d48"/>
+      <circle cx="38" cy="115" r="4" fill="#38bdf8"/>
+      <circle cx="72" cy="132" r="4" fill="#facc15"/>
+    </svg>
+  </div>
+
+  <!-- 🎄 CHOINKA PRAWA -->
+  <div class="tree tree-right">
+    <svg viewBox="0 0 120 180">
+      <polygon points="60,8 66,24 84,24 69,34 75,50 60,40 45,50 51,34 36,24 54,24"
+        fill="#facc15" stroke="#fbbf24" stroke-width="2"/>
+      <polygon points="60,35 45,70 75,70" fill="#166534"/>
+      <polygon points="60,60 35,110 85,110" fill="#15803d"/>
+      <polygon points="60,90 25,150 95,150" fill="#16a34a"/>
+      <rect x="52" y="150" width="16" height="26" fill="#7c2d12"/>
+      <circle cx="50" cy="55"  r="4" fill="#f97316"/>
+      <circle cx="78" cy="82"  r="4" fill="#e11d48"/>
+      <circle cx="38" cy="115" r="4" fill="#38bdf8"/>
+      <circle cx="72" cy="132" r="4" fill="#facc15"/>
+    </svg>
+  </div>
+
+  <header>
+    <h1>Kalendarz Adwentowy</h1>
+    <p>Aktualna data i czas: <span id="current-date">—</span></p>
+    <p id="countdown">—</p>
+  </header>
+
+  <section id="calendar" class="calendar"></section>
+</div>
+
+<!-- audio: gramy po kliknięciu okienka -->
+<audio id="bg-music" loop></audio>
+
+<!-- modal -->
+<div id="modal-backdrop" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title"></h2>
+      <button id="modal-close" class="modal-close">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="photo-frame">
+        <img id="modal-image" src="" alt="">
+      </div>
+
+      <div class="message-box">
+        <h3>Od Łukasza:</h3>
+        <p id="love-text"></p>
+      </div>
+
+      <div class="task-box">
+        <h3>Zadanie na dziś:</h3>
+        <p id="task-text"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* --- TRYB TESTOWY (opcjonalny) --- */
+const USE_FORCE_DATE = true;  // true = użyj FORCE_DATE, false = czas z internetu
+const FORCE_DATE = new Date(2025, 11, 24, 12, 0, 0); // 2 grudnia 2025
+
+const TOTAL_DAYS = 24;
+const calendar = document.getElementById("calendar");
+const modalBackdrop = document.getElementById("modal-backdrop");
+const modalTitle = document.getElementById("modal-title");
+const modalImage = document.getElementById("modal-image");
+const loveTextEl = document.getElementById("love-text");
+const taskTextEl = document.getElementById("task-text");
+const currentDateSpan = document.getElementById("current-date");
+const countdownSpan   = document.getElementById("countdown");
+const modalClose = document.getElementById("modal-close");
+const bgMusic    = document.getElementById("bg-music");
+
+/*  💌 TU WPISUJESZ 24 TEKSTY "OD CIEBIE"  ---------------- */
+const loveTexts = {
+  1: "Kocham każdy Twój uśmiech, skarbie.",
+  2: "Dziękuję, że jesteś w moim życiu.",
+  3: "Jesteś moją ulubioną osobą na świecie.",
+  4: "Najlepsze chwile to te spędzone z Tobą.",
+  5: "Uwielbiam patrzeć, jak się śmiejesz.",
+  6: "Jestem z Ciebie ogromnie dumny.",
+  7: "Każdy dzień z Tobą jest lepszy.",
+  8: "Twoja obecność daje mi spokój.",
+  9: "Jesteś piękna – wewnętrznie i zewnętrznie.",
+ 10: "Nie wymieniłbym Cię na nikogo innego.",
+ 11: "Nawet zwykły dzień z Tobą jest wyjątkowy.",
+ 12: "Dziękuję za Twoją cierpliwość i czułość.",
+ 13: "Kocham, gdy opowiadasz mi o swoich marzeniach.",
+ 14: "Jesteś dla mnie domem.",
+ 15: "Uwielbiam, jak potrafisz mnie rozśmieszyć.",
+ 16: "Wierzę w Ciebie całym sercem.",
+ 17: "Jesteś moim największym prezentem.",
+ 18: "Cieszę się, że mogę z Tobą dzielić codzienność.",
+ 19: "Twoje oczy są moją ulubioną gwiazdozbiorą.",
+ 20: "Kocham Cię – dziś, jutro i zawsze.",
+ 21: "Dziękuję, że mogę przy Tobie być sobą.",
+ 22: "Jestem szczęściarzem, że Cię mam.",
+ 23: "Nie mogę się doczekać wszystkich naszych kolejnych wspólnych dni.",
+ 24: "Wesołych Świąt, kochanie. Dziękuję, że jesteś."
+};
+
+/*  ✅ TU WPISUJESZ 24 ZADANIA  --------------------------- */
+const taskTexts = {
+  1: "Zrób dziś coś dla siebie — masaż, kąpiel albo chwilę relaksu.",
+  2: "Zadbaj o ciało: rozciąganie lub gorący prysznic.",
+  3: "Znajdź 10 minut tylko dla siebie na ciszę.",
+  4: "Napisz mi jedną rzecz, którą dziś w sobie lubisz.",
+  5: "Przygotuj aromatyczną herbatę lub kakao i wypij powoli.",
+  6: "Załóż coś, w czym czujesz się naprawdę dobrze.",
+  7: "Znajdź dziś trzy rzeczy, za które jesteś wdzięczna.",
+  8: "Zrób sobie mały seans filmowy lub serialowy.",
+  9: "Zadzwoń lub napisz do kogoś bliskiego z dobrym słowem.",
+ 10: "Zrób kilka głębokich oddechów i naprawdę odpocznij.",
+ 11: "Wybierz jedną miłą rzecz, którą jutro zrobisz tylko dla siebie.",
+ 12: "Posłuchaj ulubionej świątecznej piosenki i po prostu się uśmiechnij.",
+ 13: "Zapisz jedno swoje marzenie na kolejny rok.",
+ 14: "Zrób drobny porządek w miejscu, w którym najczęściej odpoczywasz.",
+ 15: "Wybierz zdjęcie, które kojarzy Ci się z dobrym wspomnieniem.",
+ 16: "Podziękuj dziś komuś za coś drobnego, ale ważnego.",
+ 17: "Pomyśl o tym, z czego możesz być dziś dumna.",
+ 18: "Zrób sobie ciepły napój i wypij go bez telefonu w ręku.",
+ 19: "Zapisz trzy rzeczy, które w sobie lubisz.",
+ 20: "Poświęć kilka minut na spokojną refleksję lub modlitwę.",
+ 21: "Zaplanuj jedną przyjemną rzecz, którą zrobimy razem po Świętach.",
+ 22: "Zaproponuj komuś wspólny świąteczny czas (spacer, film, rozmowę).",
+ 23: "Zrób ostatnią małą rzecz, która ułatwi Ci spokojną Wigilię.",
+ 24: "Znajdź chwilę, żeby naprawdę nacieszyć się tym dniem."
+};
+
+function getColorClass(day) {
+  const blue  = [1,4,7,10,13,16,19,22];
+  const red   = [2,5,8,11,14,17,20,23];
+  const green = [3,6,9,12,15,18,21];
+  if (blue.includes(day))  return "blue";
+  if (red.includes(day))   return "red";
+  if (green.includes(day)) return "green";
+  if (day === 24)          return "gold";
+}
+
+/* czas z internetu */
+async function getCurrentDate() {
+  try {
+    const res = await fetch("https://worldtimeapi.org/api/ip");
+    const data = await res.json();
+    return new Date(data.datetime);
+  } catch {
+    return new Date();
+  }
+}
+
+function renderCalendar(unlockDay) {
+  for (let day = 1; day <= TOTAL_DAYS; day++) {
+    const box = document.createElement("div");
+    box.classList.add("day", getColorClass(day));
+
+    if (day > unlockDay) {
+      box.classList.add("locked");
+    } else {
+      box.onclick = () => openDay(day, box);
+    }
+
+    if (day === unlockDay && unlockDay > 0) box.classList.add("today");
+
+    const door = document.createElement("div");
+    door.classList.add("day-door");
+    door.textContent = day;
+
+    const inner = document.createElement("div");
+    inner.classList.add("day-inner");
+    inner.innerHTML =
+      `<span>${day}</span><span style="font-size:0.85rem;">${
+        day > unlockDay ? "Wkrótce" : "Otwórz"
+      }</span>`;
+
+    box.append(inner, door);
+    calendar.appendChild(box);
+  }
+}
+
+/* otwieranie okienka + muzyka */
+function openDay(day, box) {
+  box.classList.add("opened");
+
+  modalTitle.textContent = "Dzień " + day;
+  modalImage.src = "images/" + day + ".jpg";
+
+  loveTextEl.textContent = loveTexts[day] || "";
+  taskTextEl.textContent = taskTexts[day] || "";
+
+  if (bgMusic) {
+    bgMusic.pause();
+    bgMusic.currentTime = 0;
+    bgMusic.src = "music/" + day + ".mp3";
+    bgMusic.load();
+    bgMusic.play().catch(() => {});
+  }
+
+  modalBackdrop.classList.add("open");
+}
+
+modalClose.onclick = () => modalBackdrop.classList.remove("open");
+modalBackdrop.onclick = (e) => {
+  if (e.target === modalBackdrop) modalBackdrop.classList.remove("open");
+};
+
+/* śnieg */
+setInterval(() => {
+  const s = document.createElement("div");
+  s.className = "snowflake";
+  s.style.left = Math.random() * 100 + "vw";
+  s.style.animationDuration = 6 + Math.random() * 6 + "s";
+  document.body.appendChild(s);
+  setTimeout(() => s.remove(), 12000);
+}, 450);
+
+/* START */
+(async function () {
+  const initialDate = USE_FORCE_DATE ? FORCE_DATE : await getCurrentDate();
+  let now = initialDate;
+
+  function updateTime() {
+    currentDateSpan.textContent = now.toLocaleString("pl-PL", {
+      weekday:"long", day:"numeric", month:"long", year:"numeric",
+      hour:"2-digit", minute:"2-digit", second:"2-digit"
+    });
+    now = new Date(now.getTime() + 1000);
+  }
+  updateTime();
+  setInterval(updateTime, 1000);
+
+  const year = initialDate.getFullYear();
+  const eve = new Date(year, 11, 24);
+  const diffDays = Math.ceil((eve - initialDate) / (1000*60*60*24));
+  countdownSpan.textContent =
+    diffDays > 0 ? `Do Wigilii pozostało: ${diffDays} dni` : "Dziś Wigilia!";
+
+  const month = initialDate.getMonth();
+  const unlockDay = month === 11
+    ? Math.min(initialDate.getDate(), TOTAL_DAYS)
+    : 0;
+
+  renderCalendar(unlockDay);
+})();
+</script>
+</body>
+</html>
