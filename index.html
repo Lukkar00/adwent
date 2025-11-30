@@ -342,7 +342,7 @@ header h1 {
 <script>
 /* --- TRYB TESTOWY (opcjonalny) --- */
 const USE_FORCE_DATE = true;  // true = użyj FORCE_DATE, false = czas z internetu
-const FORCE_DATE = new Date(2025, 11, 24, 12, 0, 0); // 2 grudnia 2025
+const FORCE_DATE = new Date(2025, 11, 24, 12, 0, 0);
 
 const TOTAL_DAYS = 24;
 const calendar = document.getElementById("calendar");
@@ -356,7 +356,7 @@ const countdownSpan   = document.getElementById("countdown");
 const modalClose = document.getElementById("modal-close");
 const bgMusic    = document.getElementById("bg-music");
 
-/*  💌 TU WPISUJESZ 24 TEKSTY "OD CIEBIE"  ---------------- */
+/*  💌 TEKSTY "OD CIEBIE"  ---------------- */
 const loveTexts = {
   1: "Kocham każdy Twój uśmiech, skarbie.",
   2: "Dziękuję, że jesteś w moim życiu.",
@@ -384,7 +384,7 @@ const loveTexts = {
  24: "Wesołych Świąt, kochanie. Dziękuję, że jesteś."
 };
 
-/*  ✅ TU WPISUJESZ 24 ZADANIA  --------------------------- */
+/*  ✅ ZADANIA  --------------------------- */
 const taskTexts = {
   1: "Zrób dziś sobie dobrze lub skorzystaj z mojego naturalnego narzędzia",
   2: "Zadbaj o ciało: rozciąganie lub gorący prysznic.",
@@ -462,12 +462,37 @@ function renderCalendar(unlockDay) {
   }
 }
 
+/* 🔁 wybór obrazka: .jpg → .JPG → placeholder */
+function setImageForDay(day) {
+  const base = "images/" + day;
+  const candidates = [base + ".jpg", base + ".JPG"];
+  let index = 0;
+
+  function tryNext() {
+    if (index >= candidates.length) {
+      // opcjonalnie: obraz zastępczy, jeśli nie ma żadnego z powyższych
+      modalImage.src = "images/placeholder.jpg"; 
+      return;
+    }
+
+    const testImg = new Image();
+    const src = candidates[index++];
+    testImg.onload = () => {
+      modalImage.src = src;
+    };
+    testImg.onerror = tryNext;
+    testImg.src = src;
+  }
+
+  tryNext();
+}
+
 /* otwieranie okienka + muzyka */
 function openDay(day, box) {
   box.classList.add("opened");
 
   modalTitle.textContent = "Dzień " + day;
-  modalImage.src = "images/" + day + ".jpg";
+  setImageForDay(day);  // <-- tu zamiast sztywnego ".jpg"
 
   loveTextEl.textContent = loveTexts[day] || "";
   taskTextEl.textContent = taskTexts[day] || "";
@@ -529,6 +554,3 @@ setInterval(() => {
 </script>
 </body>
 </html>
-
-
-
