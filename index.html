@@ -341,7 +341,7 @@ header h1 {
 
 <script>
 /* --- TRYB TESTOWY (opcjonalny) --- */
-const USE_FORCE_DATE = false;  // true = użyj FORCE_DATE, false = czas z internetu
+const USE_FORCE_DATE = true;  // true = użyj FORCE_DATE, false = czas z internetu
 const FORCE_DATE = new Date(2025, 11, 24, 12, 0, 0);
 
 const TOTAL_DAYS = 24;
@@ -356,61 +356,71 @@ const countdownSpan   = document.getElementById("countdown");
 const modalClose = document.getElementById("modal-close");
 const bgMusic    = document.getElementById("bg-music");
 
-/*  💌 TEKSTY "OD CIEBIE"  ---------------- */
-const loveTexts = {
-  1: "Kocham każdy Twój uśmiech, skarbie.",
-  2: "Dziękuję, że jesteś w moim życiu.",
-  3: "Jesteś moją ulubioną osobą na świecie.",
-  4: "Najlepsze chwile to te spędzone z Tobą.",
-  5: "Uwielbiam patrzeć, jak się śmiejesz.",
-  6: "Jestem z Ciebie ogromnie dumny.",
-  7: "Każdy dzień z Tobą jest lepszy.",
-  8: "Twoja obecność daje mi spokój.",
-  9: "Jesteś piękna – wewnętrznie i zewnętrznie.",
- 10: "Nie wymieniłbym Cię na nikogo innego.",
- 11: "Nawet zwykły dzień z Tobą jest wyjątkowy.",
- 12: "Dziękuję za Twoją cierpliwość i czułość.",
- 13: "Kocham, gdy opowiadasz mi o swoich marzeniach.",
- 14: "Jesteś dla mnie domem.",
- 15: "Uwielbiam, jak potrafisz mnie rozśmieszyć.",
- 16: "Wierzę w Ciebie całym sercem.",
- 17: "Jesteś moim największym prezentem.",
- 18: "Cieszę się, że mogę z Tobą dzielić codzienność.",
- 19: "Twoje oczy są moją ulubioną gwiazdozbiorą.",
- 20: "Kocham Cię – dziś, jutro i zawsze.",
- 21: "Dziękuję, że mogę przy Tobie być sobą.",
- 22: "Jestem szczęściarzem, że Cię mam.",
- 23: "Nie mogę się doczekać wszystkich naszych kolejnych wspólnych dni.",
- 24: "Wesołych Świąt, kochanie. Dziękuję, że jesteś."
+/*  💌 TEKSTY "OD CIEBIE" – ZAKODOWANE  ---------------- */
+const loveTextsEncoded = {
+  1: 'S29jaGFtIGthxbxkeSBUd8OzaiB1xZttaWVjaCwgc2thcmJpZS4=',
+  2: 'RHppxJlrdWrEmSwgxbxlIGplc3RlxZsgdyBtb2ltIMW8eWNpdS4=',
+  3: 'SmVzdGXFmyBtb2rEhSB1bHViaW9uxIUgb3NvYsSFIG5hIMWbd2llY2llLg==',
+  4: 'TmFqbGVwc3plIGNod2lsZSB0byB0ZSBzcMSZZHpvbmUgeiBUb2LEhS4=',
+  5: 'VXdpZWxiaWFtIHBhdHJ6ZcSHLCBqYWsgc2nEmSDFm21pZWplc3ou',
+  6: 'SmVzdGVtIHogQ2llYmllIG9ncm9tbmllIGR1bW55Lg==',
+  7: 'S2HFvGR5IGR6aWXFhCB6IFRvYsSFIGplc3QgbGVwc3p5Lg==',
+  8: 'VHdvamEgb2JlY25vxZvEhyBkYWplIG1pIHNwb2vDs2ou',
+  9: 'SmVzdGXFmyBwacSZa25hIOKAkyB3ZXduxJl0cnpuaWUgaSB6ZXduxJl0cnpuaWUu',
+ 10: 'TmllIHd5bWllbmnFgmJ5bSBDacSZIG5hIG5pa29nbyBpbm5lZ28u',
+ 11: 'TmF3ZXQgend5a8WCeSBkemllxYQgeiBUb2LEhSBqZXN0IHd5asSFdGtvd3ku',
+ 12: 'RHppxJlrdWrEmSB6YSBUd29qxIUgY2llcnBsaXdvxZvEhyBpIGN6dcWCb8WbxIcu',
+ 13: 'S29jaGFtLCBnZHkgb3Bvd2lhZGFzeiBtaSBvIHN3b2ljaCBtYXJ6ZW5pYWNoLg==',
+ 14: 'SmVzdGXFmyBkbGEgbW5pZSBkb21lbS4=',
+ 15: 'VXdpZWxiaWFtLCBqYWsgcG90cmFmaXN6IG1uaWUgcm96xZttaWVzennEhy4=',
+ 16: 'V2llcnrEmSB3IENpZWJpZSBjYcWCeW0gc2VyY2VtLg==',
+ 17: 'SmVzdGXFmyBtb2ltIG5handpxJlrc3p5bSBwcmV6ZW50ZW0u',
+ 18: 'Q2llc3rEmSBzacSZLCDFvGUgbW9nxJkgeiBUb2LEhSBkemllbGnEhyBjb2R6aWVubm/Fm8SHLg==',
+ 19: 'VHdvamUgb2N6eSBzxIUgbW9qxIUgdWx1YmlvbsSFIGd3aWF6ZG96YmlvcsSFLg==',
+ 20: 'S29jaGFtIENpxJkg4oCTIGR6acWbLCBqdXRybyBpIHphd3N6ZS4=',
+ 21: 'RHppxJlrdWrEmSwgxbxlIG1vZ8SZIHByenkgVG9iaWUgYnnEhyBzb2LEhS4=',
+ 22: 'SmVzdGVtIHN6Y3rEmcWbY2lhcnplbSwgxbxlIENpxJkgbWFtLg==',
+ 23: 'TmllIG1vZ8SZIHNpxJkgZG9jemVrYcSHIHdzenlzdGtpY2ggbmFzenljaCBrb2xlam55Y2ggd3Nww7NsbnljaCBkbmku',
+ 24: 'V2Vzb8WCeWNoIMWad2nEhXQsIGtvY2hhbmllLiBEemnEmWt1asSZLCDFvGUgamVzdGXFmy4='
 };
 
-/*  ✅ ZADANIA  --------------------------- */
-const taskTexts = {
-  1: "Zrób dziś sobie dobrze lub skorzystaj z mojego naturalnego narzędzia",
-  2: "Zadbaj o ciało: rozciąganie lub gorący prysznic.",
-  3: "Znajdź 10 minut tylko dla siebie na ciszę.",
-  4: "Napisz mi jedną rzecz, którą dziś w sobie lubisz.",
-  5: "Przygotuj aromatyczną herbatę lub kakao i wypij powoli.",
-  6: "Załóż coś, w czym czujesz się naprawdę dobrze.",
-  7: "Znajdź dziś trzy rzeczy, za które jesteś wdzięczna.",
-  8: "Zrób sobie mały seans filmowy lub serialowy.",
-  9: "Zadzwoń lub napisz do kogoś bliskiego z dobrym słowem.",
- 10: "Zrób kilka głębokich oddechów i naprawdę odpocznij.",
- 11: "Wybierz jedną miłą rzecz, którą jutro zrobisz tylko dla siebie.",
- 12: "Posłuchaj ulubionej świątecznej piosenki i po prostu się uśmiechnij.",
- 13: "Zapisz jedno swoje marzenie na kolejny rok.",
- 14: "Zrób drobny porządek w miejscu, w którym najczęściej odpoczywasz.",
- 15: "Wybierz zdjęcie, które kojarzy Ci się z dobrym wspomnieniem.",
- 16: "Podziękuj dziś komuś za coś drobnego, ale ważnego.",
- 17: "Pomyśl o tym, z czego możesz być dziś dumna.",
- 18: "Zrób sobie ciepły napój i wypij go bez telefonu w ręku.",
- 19: "Zapisz trzy rzeczy, które w sobie lubisz.",
- 20: "Poświęć kilka minut na spokojną refleksję lub modlitwę.",
- 21: "Zaplanuj jedną przyjemną rzecz, którą zrobimy razem po Świętach.",
- 22: "Zaproponuj komuś wspólny świąteczny czas (spacer, film, rozmowę).",
- 23: "Zrób ostatnią małą rzecz, która ułatwi Ci spokojną Wigilię.",
- 24: "Znajdź chwilę, żeby naprawdę nacieszyć się tym dniem."
+/*  ✅ ZADANIA – ZAKODOWANE  --------------------------- */
+const taskTextsEncoded = {
+  1: 'WnLDs2IgZHppxZsgc29iaWUgZG9icnplIGx1YiBza29yenlzdGFqIHogbW9qZWdvIG5hdHVyYWxuZWdvIG5hcnrEmWR6aWE=',
+  2: 'WmFkYmFqIG8gY2lhxYJvOiByb3pjacSFZ2FuaWUgbHViIGdvcsSFY3kgcHJ5c3puaWMu',
+  3: 'Wm5hamTFuiAxMCBtaW51dCB0eWxrbyBkbGEgc2llYmllIG5hIGNpc3rEmS4=',
+  4: 'TmFwaXN6IG1pIGplZG7EhSByemVjeiwga3TDs3LEhSBkemnFmyB3IHNvYmllIGx1Ymlzei4=',
+  5: 'UHJ6eWdvdHVqIGFyb21hdHljem7EhSBoZXJiYXTEmSBsdWIga2FrYW8gaSB3eXBpaiBwb3dvbGku',
+  6: 'WmHFgsOzxbwgY2/FmywgdyBjenltIGN6dWplc3ogc2nEmSBuYXByYXdkxJkgZG9icnplLg==',
+  7: 'Wm5hamTFuiBkemnFmyB0cnp5IHJ6ZWN6eSwgemEga3TDs3JlIGplc3RlxZsgd2R6acSZY3puYS4=',
+  8: 'WnLDs2Igc29iaWUgYWHFgnkgc2VhbnMgZmlsbW93eSBsdWIgc2VyaWFsb3d5Lg==',
+  9: 'WmFkendvxYQgbHViIG5hcGlzeiBkbyBrb2dvxZsgYmxpc2tpZWdvIHogZG9icnltIHPFgm93ZW0u',
+ 10: 'WnLDs2Iga2lsa2EgZ8WCxJlib2tpY2ggb2RkZWNow7N3IGkgbmFwcmF3ZMSZIG9kcG9jem5pai4=',
+ 11: 'V3liaWVyeiBqZWRuxIUgbWnFgsSFIHJ6ZWN6LCBrdMOzcsSFIGp1dHJvIHpyb2Jpc3ogdHlsa28gZGxhIHNpZWJpZS4=',
+ 12: 'UG9zxYJ1Y2hhaiB1bHViaW9uZWogxZt3acSFdGVjem5laiBwaW9zZW5raSBpIHBvIHByb3N0dSBzacSZIHXFm21pZWNobmlqLg==',
+ 13: 'WmFwaXN6IGplZG5vIHN3b2plIG1hcnplbmllIG5hIGtvbGVqbnkgcm9rLg==',
+ 14: 'WnLDs2IgbXJvYm55IHBvcnrEhWRlayB3IG1pZWpzY3UsIHcga3TDs3J5bSBuYWpjesSZxZtjaWVqIG9kcG9jenl3YXN6Lg==',
+ 15: 'V3liaWVyeiB6ZGrEmWNpZSwga3TDs3JlIGtvamFyenkgQ2kgc2nEmSB6IGRvYnJ5bSB3c3BvbW5pZW5pZW0u',
+ 16: 'UG9kemnEmWt1aiBkemnFmyBrb211xZsgemEgY2/FmyBkcm9ibmVnbywgYWxlIHdhxbxuZWdvLg==',
+ 17: 'UG9tecWbbCBvIHR5bSwgeiBjemVnbyBtb8W8ZXN6IGJ5xIcgZHppxZsgZHVtbmEu',
+ 18: 'WnLDs2Igc29iaWUgY2llcMWCeSBuYXDDs2ogaSB3eXBpaiBnbyBiZXogdGVsZWZvbnUgdyByxJlrdS4=',
+ 19: 'WmFwaXN6IHRyenkgcnplY3p5LCBrdMOzcmUgdyBzb2JpZSBsdWJpc3ou',
+ 20: 'UG/Fm3dpxJnEhyBraWxrYSBtaW51dCBuYSBzcG9rb2puxIUgcmVmbGVrc2rEmSBsdWIgbW9kbGl0d8SZLg==',
+ 21: 'WmFwbGFudWogamVkbsSFIHByenlqZW1uxIUgcnplY3osIGt0w7NyxIUgenJvYmlteSByYXplbSBwbyDFmndpxJl0YWNoLg==',
+ 22: 'WmFwcm9wb251aiBrb211xZsgd3Nww7NsbnkgxZt3acSFdGVjem55IGN6YXMgKHNwYWNlciwgZmlsbSwgcm96bW93xJkpLg==',
+ 23: 'WnLDs2Igb3N0YXRuacSFIG1hxYLEhSByemVjeiwga3TDs3JhIHXFgmF0d2kgQ2kgc3Bva29qbsSFIFdpZ2lsacSZLg==',
+ 24: 'Wm5hamTFuiBjaHdpbMSZLCDFvGVieSBuYXByYXdkxJkgbmFjaWVzennEhyBzacSZIHR5bSBkbmllbS4='
 };
+
+/* prosty decode Base64 → UTF-8 */
+function decodeB64(b64) {
+  if (!b64) return "";
+  try {
+    return decodeURIComponent(escape(atob(b64)));
+  } catch (e) {
+    return atob(b64);
+  }
+}
 
 function getColorClass(day) {
   const blue  = [1,4,7,10,13,16,19,22];
@@ -470,7 +480,6 @@ function setImageForDay(day) {
 
   function tryNext() {
     if (index >= candidates.length) {
-      // opcjonalnie: obraz zastępczy, jeśli nie ma żadnego z powyższych
       modalImage.src = "images/placeholder.jpg"; 
       return;
     }
@@ -492,10 +501,10 @@ function openDay(day, box) {
   box.classList.add("opened");
 
   modalTitle.textContent = "Dzień " + day;
-  setImageForDay(day);  // <-- tu zamiast sztywnego ".jpg"
+  setImageForDay(day);
 
-  loveTextEl.textContent = loveTexts[day] || "";
-  taskTextEl.textContent = taskTexts[day] || "";
+  loveTextEl.textContent = decodeB64(loveTextsEncoded[day]);
+  taskTextEl.textContent = decodeB64(taskTextsEncoded[day]);
 
   if (bgMusic) {
     bgMusic.pause();
@@ -551,7 +560,20 @@ setInterval(() => {
 
   renderCalendar(unlockDay);
 })();
+
+/* 🔒 prosta blokada „podglądaczy” */
+document.addEventListener("contextmenu", (e) => e.preventDefault());
+
+document.addEventListener("keydown", (e) => {
+  if (
+    e.key === "F12" ||
+    (e.ctrlKey && e.shiftKey && ["I","J","C"].includes(e.key.toUpperCase())) ||
+    (e.ctrlKey && !e.shiftKey && e.key.toUpperCase() === "U")
+  ) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+});
 </script>
 </body>
 </html>
-
